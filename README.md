@@ -1,10 +1,10 @@
 # CmsSystem
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/portavice/cmssytem.svg?style=flat-square)](https://packagist.org/packages/portavice/cmssytem)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/portavice/cmssystem.svg?style=flat-square)](https://packagist.org/packages/portavice/cmssystem)
 ![Test Status](https://img.shields.io/github/actions/workflow/status/portavice/CmsSystem/tests.yml?branch=main&label=Tests)
 ![Code Style Status](https://img.shields.io/github/actions/workflow/status/portavice/CmsSystem/code-style.yml?branch=main&label=Code%20Style)
-<a href="https://packagist.org/packages/portavice/cmssytem"><img src="https://img.shields.io/packagist/php-v/portavice/cmssytem.svg?style=flat-square" alt="PHP from Packagist"></a>
-[![Total Downloads](https://img.shields.io/packagist/dt/portavice/cmssytem.svg?style=flat-square)](https://packagist.org/packages/portavice/cmssytem)
+<a href="https://packagist.org/packages/portavice/cmssystem"><img src="https://img.shields.io/packagist/php-v/portavice/cmssystem.svg?style=flat-square" alt="PHP from Packagist"></a>
+[![Total Downloads](https://img.shields.io/packagist/dt/portavice/cmssystem.svg?style=flat-square)](https://packagist.org/packages/portavice/cmssystem)
 
 ## Installation
 Um die Projekt **CmsSystem** in Ihrem Projekt zu verwenden, fügen Sie sie einfach in Ihr Projektverzeichnis hinzu oder installieren Sie sie über Composer:
