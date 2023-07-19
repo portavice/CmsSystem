@@ -10,7 +10,7 @@
 Um die Projekt **CmsSystem** in Ihrem Projekt zu verwenden, fügen Sie sie einfach in Ihr Projektverzeichnis hinzu oder installieren Sie sie über Composer:
 
 ```bash
-composer require portavice/cms-system
+composer require portavice/cmssystem
 ```
 
 Füge Sie anschließend die Config-Datei ein:
@@ -22,7 +22,7 @@ php artisan vendor:publish --provider="Portavice\CmsSystem\CmsSystemServiceProvi
 Um das Projekt **CmsSystem** zu aktualisieren, führen Sie einfach den folgenden Befehl aus:
 
 ```bash
-composer update portavice/cms-system
+composer update portavice/cmssystem
 ```
 
 Anschließend können Sie die Config-Datei aktualisieren:
