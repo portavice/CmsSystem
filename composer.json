@@ -32,9 +32,6 @@
         },
         "psr-4": {
             "Portavice\\CmsSystem\\": "src"
-        },
-        "psr-12": {
-            "Portavice\\CmsSystem\\": "src"
         }
     },
     "autoload-dev": {
@@ -42,9 +39,6 @@
             "Portavice\\CmsSystem\\Tests\\": "tests"
         },
         "psr-4": {
-            "Portavice\\CmsSystem\\Tests\\": "tests"
-        },
-        "psr-12": {
             "Portavice\\CmsSystem\\Tests\\": "tests"
         }
     },
