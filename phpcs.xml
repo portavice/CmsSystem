@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="project coding standard">
+    <!-- display progress -->
+    <arg value="psv"/>
+
+    <!-- use colors in output -->
+    <arg name="colors"/>
+
+    <!-- Paths to check -->
+    <file>src</file>
+    <file>tests</file>
+
+    <!-- rules -->
+    <rule ref="PSR12"/>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+
+    <!-- Check for PHP version compatibility. -->
+    <rule ref="PHPCompatibility"/>
+    <config name="testVersion" value="7.4-"/>
+</ruleset>

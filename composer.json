@@ -1,0 +1,73 @@
+{
+    "name": "portavice/cmssystem",
+    "description": "CMS System for Laravel",
+    "keywords": [
+        "portavice",
+        "cmssystem"
+    ],
+    "homepage": "https://portavice.de",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Shaun Lüdeke",
+            "email": "shaun.luedeke@portavice.de",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
+        "phpcompatibility/php-compatibility": "^9.3.5",
+        "squizlabs/php_codesniffer": "^3.7.2"
+    },
+    "autoload": {
+        "psr-0": {
+            "Portavice\\CmsSystem\\": "src"
+        },
+        "psr-4": {
+            "Portavice\\CmsSystem\\": "src"
+        },
+        "psr-12": {
+            "Portavice\\CmsSystem\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "Portavice\\CmsSystem\\Tests\\": "tests"
+        },
+        "psr-4": {
+            "Portavice\\CmsSystem\\Tests\\": "tests"
+        },
+        "psr-12": {
+            "Portavice\\CmsSystem\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "cs": "phpcs",
+        "csfix": "phpcbf"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Portavice\\CmsSystem\\CmsSystemServiceProvider"
+            ],
+            "aliases": {
+                "CmsSystem": "Portavice\\CmsSystem\\CmsSystemFacade"
+            }
+        }
+    }
+}
