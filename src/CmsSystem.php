@@ -23,6 +23,7 @@ class CmsSystem
     protected Collection $params;
 
     private string $pattern;
+    private string $patternWithEnd;
     private string $patternElse;
     private string $patternElseIf;
     private string $patternCase;
@@ -43,7 +44,8 @@ class CmsSystem
 
         $this->elements = (array)config('cms-system.replacer.elements', []);
         $this->methods = (array)config('cms-system.replacer.methods', []);
-        $this->pattern = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix .
+        $this->pattern = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix . '/s';
+        $this->patternWithEnd = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix .
             '(?<content>.*?)' . $prefix . '\s*' . $endBlockPrefix . '\k<method>\s*' . $suffix . '/s';
         $this->patternElse = '/' . $prefix . '\s*else\s*' . $suffix .
             '(?<content>.*?)' . $prefix . '\s*(elseif|else|' . $endBlockPrefix . 'if)\s*' . $suffix . '/s';
@@ -85,17 +87,22 @@ class CmsSystem
 
     public function splitPattern(string $content): array
     {
-        preg_match_all($this->pattern, $content, $matches, PREG_SET_ORDER);
-        return $matches ?? [];
+        preg_match_all($this->patternWithEnd, $content, $matchesWithEnd, PREG_SET_ORDER);
+        return $matchesWithEnd;
     }
     #endregion
 
     public function replace(?string $content = null): string
     {
         $content = html_entity_decode($this->decode($content ?? $this->content));
+        while (preg_match($this->patternWithEnd, $content)) {
+            $content = preg_replace_callback($this->patternWithEnd, function ($matches) {
+                return $this->replaceBlock($matches['method'], $matches['args'] ?? '', $matches['content'] ?? null);
+            }, $content);
+        }
         while (preg_match($this->pattern, $content)) {
             $content = preg_replace_callback($this->pattern, function ($matches) {
-                return $this->replaceBlock($matches['method'], $matches['args'] ?? '', $matches['content'] ?? null);
+                return $this->replaceBlock($matches['method'], $matches['args'] ?? '', null);
             }, $content);
         }
         return $content;
