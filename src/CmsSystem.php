@@ -20,7 +20,7 @@ class CmsSystem
     private array $elements;
     private array $methods;
 
-    private Collection $params;
+    protected Collection $params;
 
     private string $pattern;
     private string $patternElse;
@@ -102,12 +102,12 @@ class CmsSystem
     }
 
     #region String Cleanup
-    private function decode(string $string): string
+    protected function decode(string $string): string
     {
         return str_replace(['&lt;', '&#x22;', '&#34;', '&quot;', '&gt;'], ['<', '"', '"', '"', '>'], $string);
     }
 
-    private function args(string $argString = ''): array
+    protected function args(string $argString = ''): array
     {
         $argString = trim($argString ?? '');
         $args = [];
@@ -152,7 +152,7 @@ class CmsSystem
         return array_merge($args, ...$arrays);
     }
 
-    private function cleanValue(string $value): string|int|float
+    protected function cleanValue(string $value): string|int|float
     {
         if (str_starts_with($value, '"') && str_ends_with($value, '"')) {
             $value = substr($value, 1, -1);
@@ -181,7 +181,7 @@ class CmsSystem
     }
     #endregion
 
-    public function replaceBlock(string $method, string|array $args, ?string $content): string
+    protected function replaceBlock(string $method, string|array $args, ?string $content): string
     {
         $args = $this->args($args);
         $method = strtolower((string)$this->cleanValue($method));
@@ -213,7 +213,7 @@ class CmsSystem
         return $this->convertResult($result);
     }
 
-    private function replaceError(string $method, array $args, string $content): string
+    protected function replaceError(string $method, array $args, string $content): string
     {
         if ($this->deleteOnError) {
             return '';
@@ -224,7 +224,7 @@ class CmsSystem
         return $this->prefixError . $method . ' ' . implode(' ', $args) . $this->suffixError;
     }
 
-    private function convertResult(mixed $result, mixed ...$args): ?string
+    protected function convertResult(mixed $result, mixed ...$args): ?string
     {
         if ($result === null) {
             return null;
@@ -251,7 +251,7 @@ class CmsSystem
         return $result;
     }
 
-    private function value(mixed ...$args): mixed
+    protected function value(mixed ...$args): mixed
     {
         $key = null;
         $method = null;
@@ -290,7 +290,7 @@ class CmsSystem
         }
     }
 
-    private function isFunction(mixed $func): bool
+    protected function isFunction(mixed $func): bool
     {
         try {
             return (is_string($func) && function_exists($func))
@@ -300,7 +300,7 @@ class CmsSystem
         }
     }
 
-    private function validateIf(mixed ...$args): bool
+    protected function validateIf(mixed ...$args): bool
     {
         $regex = '/(?<key>[a-zA-Z0-9_]+)(\.|-|->|::|=)(?<method>[a-zA-Z0-9_]+)?/';
         $first = $args[0] ?? null;
