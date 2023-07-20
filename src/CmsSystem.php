@@ -44,7 +44,7 @@ class CmsSystem
 
         $this->elements = (array)config('cms-system.replacer.elements', []);
         $this->methods = (array)config('cms-system.replacer.methods', []);
-        $this->pattern = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix . '/s';
+        $this->pattern = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix . '/';
         $this->patternWithEnd = '/' . $prefix . '\s*(?<method>\w+)\s*(?<args>[^}]*)\s*' . $suffix .
             '(?<content>.*?)' . $prefix . '\s*' . $endBlockPrefix . '\k<method>\s*' . $suffix . '/s';
         $this->patternElse = '/' . $prefix . '\s*else\s*' . $suffix .
@@ -145,18 +145,27 @@ class CmsSystem
         }
 
         $method = '';
-        $regex = '/(?<args>\S+)/';
         if (str_contains($argString, '"') || str_contains($argString, '\'') || str_contains($argString, '`')) {
-            $regex = '/(?<method>\S+)\s*(?<args>(?:"(?:[^"]|\\")*")|(?:\'(?:[^\']|\\\')*\')|(?:\`(?:[^\`]|\\\`)*\`))/';
+            $regex = '/(?<args>(?:"(?:[^"]|\\")*")|(?:\'(?:[^\']|\\\')*\')|(?:\`(?:[^\`]|\\\`)*\`))/';
+            if (preg_match_all($regex, $argString, $argsMatches)) {
+                $args = array_filter($argsMatches['args']);
+            }
+        } else {
+            $args = explode(' ', $argString ?? '');
         }
-        if (preg_match_all($regex, $argString, $argsMatches)) {
-            $method = $argsMatches['method'][0] ?? '';
-            $args = array_merge($args, $argsMatches['args'] ?? []);
-        }
-        array_unshift($args, str_replace('(', '', $method ?? ''));
 
-        $args = array_map(fn ($value) => $this->cleanValue($value), array_filter($args));
-        return array_merge($args, ...$arrays);
+        $result = [];
+        foreach ($args as $arg) {
+            $arg = $this->cleanValue($arg);
+            if (($arg ?? '') === '') {
+                continue;
+            }
+            $result[] = $arg;
+        }
+        foreach ($arrays as $array) {
+            $result[] = array_filter($array);
+        }
+        return array_filter($result);
     }
 
     protected function cleanValue(string $value): string|int|float
@@ -188,7 +197,7 @@ class CmsSystem
     }
     #endregion
 
-    protected function replaceBlock(string $method, string|array $args, ?string $content): string
+    protected function replaceBlock(string|array $method, string|array $args, ?string $content): mixed
     {
         $args = $this->args($args);
         $method = strtolower((string)$this->cleanValue($method));
@@ -196,17 +205,17 @@ class CmsSystem
 
         if ($this->methods[$method] ?? true) {
             $result = match ($method) {
-                'config' => config($args[1], $args[2] ?? $content ?? null),
+                'config' => config($args[0], $args[1] ?? $content ?? null),
                 'trans', '__', 'translate' => ($this->methods['translate'] ?? true) ? trans(...$args) : null,
-                'var' => $this->var($content, $args),
-                'setvar' => $this->setVar($content, $args),
-                'unsetvar' => $this->unsetVar($content, $args),
-                'if' => $this->if($content, $args),
-                'isset' => $this->isset($content, $args),
-                'empty' => $this->empty($content, $args),
-                'switch' => $this->switch($content, $args),
-                'for' => $this->for($content, $args),
-                'foreach' => $this->foreach($content, $args),
+                'var' => $this->var($content, ...$args),
+                'setvar' => $this->setVar(...$args),
+                'unsetvar' => $this->unsetVar(...$args),
+                'if' => $this->if($content, ...$args),
+                'isset' => $this->isset($content, ...$args),
+                'empty' => $this->empty($content, ...$args),
+                'switch' => $this->switch($content, ...$args),
+                'for' => $this->for($content, ...$args),
+                'foreach' => $this->foreach($content, ...$args),
                 default => null,
             };
         }
@@ -220,12 +229,12 @@ class CmsSystem
         return $this->convertResult($result);
     }
 
-    protected function replaceError(string $method, array $args, string $content): string
+    protected function replaceError(string $method, array $args, ?string $content): string
     {
         if ($this->deleteOnError) {
             return '';
         }
-        if ($content !== '') {
+        if ($content !== '' && $content !== null) {
             return $content;
         }
         return $this->prefixError . $method . ' ' . implode(' ', $args) . $this->suffixError;
@@ -260,10 +269,12 @@ class CmsSystem
 
     protected function value(mixed ...$args): mixed
     {
+        $args = collect($args)->flatten()->toArray();
         $key = null;
         $method = null;
         $splitCount = 1;
-        if (count($args) > 0) {
+        $debug = str_contains(implode(' ', $args), 'vpEinheit');
+        if (count($args) > 0 && is_string($args[0])) {
             $regex = '/(?<key>[a-zA-Z0-9_]*)\s*(?<spliter>\.|::|->|=)\s*(?<method>[a-zA-Z0-9_]*)/';
             if (preg_match($regex, $args[0], $matches)) {
                 $key = $matches['key'];
@@ -281,6 +292,9 @@ class CmsSystem
         $param = $this->params[$key] ?? null;
         if ($param === null) {
             return $key;
+        }
+        if (is_string($param)) {
+            return $param;
         }
         if ($method === null) {
             try {
@@ -312,16 +326,17 @@ class CmsSystem
         $regex = '/(?<key>[a-zA-Z0-9_]+)(\.|-|->|::|=)(?<method>[a-zA-Z0-9_]+)?/';
         $first = $args[0] ?? null;
 
-        if ($first !== null) {
-            if (preg_match($regex, $args[0])) {
-                $first = $this->value($args[0] ?? null);
-                $args = array_slice($args, 1);
-            } elseif (count($args) === 3) {
-                $args = array_slice($args, 1);
-            } else {
-                $first = $this->value($args[0] ?? null, $args[1] ?? null);
-                $args = array_slice($args, 2);
-            }
+        if ($first === null) {
+            return false;
+        }
+        if (is_string($first) && preg_match($regex, $first)) {
+            $first = $this->value($args[0] ?? null);
+            $args = array_slice($args, 1);
+        } elseif (count($args) === 3) {
+            $args = array_slice($args, 1);
+        } else {
+            $first = $this->value($args[0] ?? null, $args[1] ?? null);
+            $args = array_slice($args, 2);
         }
         $operator = '===';
         $operatorRegex = '/(?<operator>==|===|!=|!==|>|<|>=|<=|eq|neq|gt|lt|ge|le|==!|===!|>!|<!|>=!|<=!)(?<equal>=)?/';
@@ -333,11 +348,11 @@ class CmsSystem
             $args = array_slice($args, 1);
         }
         if (count($args) < 1) {
-            return $first;
+            return false;
         }
         $second = $args[0] ?? null;
         if ($second === null) {
-            return $first;
+            return false;
         }
         if (preg_match($regex, $second)) {
             $second = $this->value($second);
@@ -369,6 +384,12 @@ class CmsSystem
         if (!($this->methods['setvar'] ?? true)) {
             return null;
         }
+        if (count($args) < 2) {
+            return null;
+        }
+        if (str_starts_with($args[0], '$')) {
+            $args[0] = substr($args[0], 1);
+        }
         $value = $this->value(...array_slice($args, 1));
         $this->params[$args[0]] = $value;
         return '';
@@ -391,8 +412,11 @@ class CmsSystem
         if ($content === null) {
             return null;
         }
-        if ($this->validateIf($args)) {
+        if ($this->validateIf(...$args)) {
             return $this->replace($this->ifReplace($content));
+        }
+        if (!preg_match($this->patternElseIf, $content) && !preg_match($this->patternElse, $content)) {
+            return '';
         }
         if ($this->methods['elseif'] ?? true) {
             while (preg_match($this->patternElseIf, $content)) {
@@ -407,8 +431,11 @@ class CmsSystem
         if (!($this->methods['else'] ?? true)) {
             return '';
         }
+        if (!preg_match($this->patternElse, $content)) {
+            return '';
+        }
         return preg_replace_callback($this->patternElse, function ($matches) {
-                return $this->replace($this->ifReplace($matches['content']));
+            return $this->replace($this->ifReplace($matches['content']));
         }, $content);
     }
 
@@ -520,10 +547,13 @@ class CmsSystem
         }
         $keyValue = array_search('as', $args, false);
         $array = $this->value(...array_slice($args, 0, $keyValue));
+        if ($array === null) {
+            return null;
+        }
         $args = array_slice($args, $keyValue + 1);
         $paramKey = null;
         $paramValue = null;
-        if (count($array) > 1) {
+        if (count($args) > 1) {
             $paramKey = $args[0];
             $paramValue = $args[2] ?? $args[1];
         } else {
